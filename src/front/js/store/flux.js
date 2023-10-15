@@ -2,6 +2,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
 			message: null,
+			email: "",
 			demo: [
 				{
 					title: "FIRST",
@@ -17,19 +18,39 @@ const getState = ({ getStore, getActions, setStore }) => {
 		},
 		actions: {
 			// Use getActions to call a function within a fuction
+			login: async (email, password) => {
+				// fetching data from the backend
+				const options = {
+					method: 'POST',
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify({ 'email': email, 'password': password })
+				}
+				const response = await fetch(process.env.BACKEND_URL + "/api/login", options)
+				if (!response.ok) {
+					console.log("Error loading message from backend", response.status, response.statusText)
+					return { status: response.status, statusText: response.statusText }
+				}
+				const data = await response.json()
+				localStorage.setItem("token", data.access_token)
+				setStore({ email: email })
+				console.log(email)
+				// don't forget to return something, that is how the async resolves
+				return data;
+			},
+
 			exampleFunction: () => {
 				getActions().changeColor(0, "green");
 			},
 
 			getMessage: async () => {
-				try{
+				try {
 					// fetching data from the backend
 					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
 					const data = await resp.json()
 					setStore({ message: data.message })
 					// don't forget to return something, that is how the async resolves
 					return data;
-				}catch(error){
+				} catch (error) {
 					console.log("Error loading message from backend", error)
 				}
 			},
